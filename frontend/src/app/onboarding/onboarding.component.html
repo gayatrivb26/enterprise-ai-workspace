@@ -1,0 +1,75 @@
+<div class="backdrop" (keydown)="onKeydown($event)" tabindex="-1">
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="onboard-title">
+    <div class="hero" aria-hidden="true">
+      <div class="glow"></div>
+
+      @switch (steps[step()].art) {
+        @case ('grounded') {
+          <div class="art art-grounded">
+            <span class="doc-card d1"></span>
+            <span class="doc-card d2"></span>
+            <span class="doc-card d3"></span>
+            <span class="beam"></span>
+          </div>
+        }
+        @case ('pipeline') {
+          <div class="art art-pipeline">
+            @for (s of ['Parse', 'Chunk', 'Embed', 'Index']; track s; let i = $index) {
+              <span class="node" [style.animation-delay.ms]="i * 260">
+                <i></i>
+                <em>{{ s }}</em>
+              </span>
+            }
+          </div>
+        }
+        @default {
+          <div class="art art-citations">
+            <span class="line l1"></span>
+            <span class="line l2"></span>
+            <span class="cite c1">1</span>
+            <span class="line l3"></span>
+            <span class="cite c2">2</span>
+            <span class="line l4"></span>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="body">
+      <app-logo [size]="30" [tagline]="null" />
+
+      <h2 id="onboard-title">{{ steps[step()].title }}</h2>
+      <p>{{ steps[step()].body }}</p>
+
+      <div class="dots" role="tablist" aria-label="Onboarding steps">
+        @for (s of steps; track s.title; let i = $index) {
+          <button
+            type="button"
+            class="dot"
+            [class.active]="i === step()"
+            (click)="goTo(i)"
+            [attr.aria-label]="'Step ' + (i + 1)"
+            [attr.aria-selected]="i === step()"
+            role="tab"
+          ></button>
+        }
+      </div>
+
+      <div class="actions">
+        <button type="button" class="ghost" (click)="skip()">Skip</button>
+        <div class="right">
+          @if (step() > 0) {
+            <button type="button" class="secondary" (click)="back()">Back</button>
+          }
+          <button type="button" class="primary" (click)="next()">
+            {{ isLast() ? 'Upload a document' : 'Next' }}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

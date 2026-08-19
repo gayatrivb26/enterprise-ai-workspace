@@ -1,0 +1,330 @@
+<div class="chat">
+  <div class="scroll-area" #scroller (scroll)="onScroll()" role="log" aria-live="polite" aria-relevant="additions">
+    <div class="thread">
+      @if (isLoadingHistory()) {
+        <div class="skeletons">
+          @for (n of [1, 2, 3]; track n) {
+            <div class="skeleton" [style.width.%]="n === 2 ? 62 : 88"></div>
+          }
+        </div>
+      }
+
+      @if (isEmpty()) {
+        <section class="empty">
+          <div class="empty-glow" aria-hidden="true"></div>
+          <div class="empty-mark" aria-hidden="true">
+            <app-logo [size]="58" [showWordmark]="false" />
+          </div>
+
+          @if (hasDocuments()) {
+            <h2>What would you like to know?</h2>
+            <p>
+              Answering from <strong>{{ store.scopeLabel() }}</strong>, with citations
+              back to the exact passages used.
+            </p>
+            <div class="suggestions">
+              @for (s of suggestions; track s) {
+                <button type="button" class="suggestion" (click)="useSuggestion(s)">
+                  <span>{{ s }}</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+              }
+            </div>
+          } @else {
+            <h2>Add a document to begin</h2>
+            <p>
+              This assistant answers only from documents you have indexed, so it needs
+              at least one before it can help.
+            </p>
+            <button type="button" class="cta" (click)="store.openTab('documents')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="M7 9l5-5 5 5M12 4v12" />
+              </svg>
+              Upload a document
+            </button>
+          }
+        </section>
+      }
+
+      @for (m of messages(); track m.id) {
+        <article class="turn" [class.user]="m.role === 'user'">
+          <div class="avatar" [class.assistant]="m.role === 'assistant'" aria-hidden="true">
+            @if (m.role === 'assistant') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z" />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            }
+          </div>
+
+          <div class="turn-body">
+            <div class="turn-meta">
+              <span class="who">{{ m.role === 'user' ? 'You' : 'Assistant' }}</span>
+              @if (m.state() === 'stopped') { <span class="tag">stopped</span> }
+              @if (m.state() === 'error') { <span class="tag error">failed</span> }
+              @if (routeBadge(m); as badge) {
+                <span class="tag route" [attr.data-route]="badge.id" [title]="badge.hint">
+                  <span class="route-dot"></span>{{ badge.label }}
+                </span>
+              }
+              @if (m.meta()?.cached) {
+                <span class="tag cached" title="Served from cache — no model call was needed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" />
+                  </svg>
+                  instant
+                </span>
+              }
+            </div>
+
+            <div class="bubble" [class.streaming]="m.state() === 'streaming'">
+              @if (m.role === 'assistant') {
+                @if (m.content()) {
+                  <div class="prose" [innerHTML]="html(m)" (click)="onProseClick($event)"></div>
+                }
+                @if (m.state() === 'streaming') {
+                  @if (!m.content()) {
+                    <!-- What the assistant is actually doing, step by step,
+                         derived from the stream rather than animated. -->
+                    <ol class="trace">
+                      @for (step of trace(m); track step.id) {
+                        <li class="trace-step" [attr.data-state]="step.state">
+                          <span class="trace-mark" aria-hidden="true">
+                            @if (step.state === 'done') {
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                   stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m5 12 5 5L20 7" />
+                              </svg>
+                            } @else {
+                              <span class="trace-spin"></span>
+                            }
+                          </span>
+                          <span class="trace-label">{{ step.label }}</span>
+                        </li>
+                      }
+                    </ol>
+                  } @else {
+                    <span class="caret" aria-hidden="true"></span>
+                  }
+                }
+              } @else {
+                <div class="prose plain">{{ m.content() }}</div>
+              }
+
+              @if (m.role === 'assistant' && m.state() !== 'streaming' && m.sources().length) {
+                <footer class="sources">
+                  <span class="sources-label">
+                    Sources
+                    <em>{{ m.sources().length }}</em>
+                  </span>
+                  <div class="chips">
+                    @for (s of m.sources(); track $index) {
+                      <div class="chip-wrap">
+                        <button
+                          type="button"
+                          class="chip"
+                          [class.open]="openCitation() === citationKey(m, $index)"
+                          (click)="toggleCitation(citationKey(m, $index))"
+                        >
+                          <span class="chip-index">{{ s.index ?? $index + 1 }}</span>
+                          <span class="chip-name">{{ sourceLabel(s) }}</span>
+                        </button>
+
+                        @if (openCitation() === citationKey(m, $index)) {
+                          <div class="citation-card" role="dialog">
+                            <header>
+                              <strong>{{ sourceLabel(s) }}</strong>
+                              @if (s.relevance !== undefined) {
+                                <span class="relevance" [title]="'Similarity to your question'">
+                                  {{ (s.relevance * 100).toFixed(0) }}% match
+                                </span>
+                              }
+                            </header>
+                            @if (s.heading) {
+                              <p class="citation-heading">{{ s.heading }}</p>
+                            }
+                            @if (s.preview) {
+                              <blockquote>{{ s.preview }}</blockquote>
+                            } @else {
+                              <p class="citation-empty">No preview available for this passage.</p>
+                            }
+                            <button
+                              type="button"
+                              class="citation-close"
+                              (click)="toggleCitation(citationKey(m, $index))"
+                              aria-label="Close preview"
+                            >×</button>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </footer>
+              }
+            </div>
+
+            @if (m.role === 'user') {
+              <div class="turn-actions">
+                <button type="button" class="icon-btn" (click)="copy(m)" title="Copy your message">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="12" height="12" rx="2" />
+                    <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+                  </svg>
+                  Copy
+                </button>
+                <button type="button" class="icon-btn" (click)="reuse(m)" title="Edit and ask again">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                  </svg>
+                  Edit
+                </button>
+              </div>
+            }
+
+            @if (m.role === 'assistant' && m.state() !== 'streaming' && m.content()) {
+              <div class="turn-actions">
+                <button type="button" class="icon-btn" (click)="copy(m)" title="Copy answer">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="12" height="12" rx="2" />
+                    <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+                  </svg>
+                  Copy
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  (click)="regenerate(m)"
+                  [disabled]="isStreaming()"
+                  title="Ask this question again"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" />
+                  </svg>
+                  Regenerate
+                </button>
+                @if (m.meta(); as meta) {
+                  @if (meta.tools_used?.length) {
+                    <span class="usage tools" [title]="'Repository tools run: ' + meta.tools_used?.join(', ')">
+                      {{ meta.tools_used?.join(' · ') }}
+                    </span>
+                  }
+                  @if (meta.tokens_out) {
+                    <span class="usage" title="Tokens used for this answer">
+                      {{ meta.tokens_in }} in · {{ meta.tokens_out }} out
+                    </span>
+                  }
+                }
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </div>
+
+  @if (!pinnedToBottom() && !isEmpty()) {
+    <button type="button" class="jump" (click)="jumpToBottom()" aria-label="Scroll to latest">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M19 12l-7 7-7-7" />
+      </svg>
+    </button>
+  }
+
+  <!-- ── Composer ────────────────────────────────────────────────────── -->
+  <div class="composer-wrap">
+    @if (error(); as message) {
+      <div class="banner" role="alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v5M12 16h.01" />
+        </svg>
+        <span class="banner-text">{{ message }}</span>
+        <button type="button" class="banner-btn" (click)="retry()" [disabled]="isStreaming()">Retry</button>
+        <button type="button" class="banner-close" (click)="dismissError()" aria-label="Dismiss">×</button>
+      </div>
+    }
+
+    <!-- Scope bar: always shows what the next question will search -->
+    <div class="scope-bar">
+      <button type="button" class="scope-pill" (click)="store.openTab('documents')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+          <path d="M14 2v6h6" />
+        </svg>
+        <span>{{ store.scopeLabel() }}</span>
+      </button>
+
+      @for (doc of store.selectedDocuments(); track doc.id) {
+        <button
+          type="button"
+          class="scope-chip"
+          (click)="store.toggleDocument(doc.id)"
+          [title]="'Stop searching ' + doc.filename"
+        >
+          {{ doc.filename }}
+          <span aria-hidden="true">×</span>
+        </button>
+      }
+
+      @if (docs.processing().length) {
+        <span class="scope-working">
+          <span class="typing small" aria-hidden="true"><i></i><i></i><i></i></span>
+          {{ docs.processing().length }} indexing
+        </span>
+      }
+    </div>
+
+    <form class="composer" (submit)="$event.preventDefault(); send()">
+      <textarea
+        #composer
+        rows="1"
+        class="composer-input"
+        [placeholder]="hasDocuments() ? 'Ask about your documents…' : 'Upload a document to get started…'"
+        [value]="draft()"
+        (input)="onDraftInput($event)"
+        (keydown)="onComposerKeydown($event)"
+        aria-label="Message"
+      ></textarea>
+
+      @if (isStreaming()) {
+        <button type="button" class="send stop" (click)="stop()" title="Stop generating">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="7" y="7" width="10" height="10" rx="2" />
+          </svg>
+          <span>Stop</span>
+        </button>
+      } @else {
+        <button type="submit" class="send" [disabled]="!canSend()" title="Send message">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+          <span>Send</span>
+        </button>
+      }
+    </form>
+
+    <p class="composer-hint">
+      <kbd>Enter</kbd> to send · <kbd>Shift</kbd>+<kbd>Enter</kbd> for a new line
+    </p>
+  </div>
+</div>

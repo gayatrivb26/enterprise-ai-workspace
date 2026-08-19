@@ -1,0 +1,350 @@
+svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, #060910 68%, transparent);
+  backdrop-filter: blur(8px);
+  animation: fade var(--normal) var(--ease) both;
+}
+
+.card {
+  width: min(500px, 100%);
+  overflow: hidden;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  animation: lift 0.34s var(--ease) both;
+}
+
+/* ── Hero art ────────────────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 188px;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--surface-2), var(--surface));
+  border-bottom: 1px solid var(--border);
+}
+.glow {
+  position: absolute;
+  top: -55%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translateX(-50%);
+  background: var(--brand-gradient);
+  filter: blur(72px);
+  opacity: 0.24;
+}
+
+.art {
+  position: relative;
+  z-index: 1;
+}
+
+/* Grounded: a stack of documents with a beam of light drawn out of them. */
+.art-grounded {
+  width: 150px;
+  height: 108px;
+}
+.doc-card {
+  position: absolute;
+  width: 68px;
+  height: 88px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+.d1 {
+  left: 0;
+  top: 12px;
+  transform: rotate(-9deg);
+  animation: float 3.4s var(--ease-in-out) infinite;
+}
+.d2 {
+  left: 40px;
+  top: 4px;
+  animation: float 3.4s var(--ease-in-out) 0.35s infinite;
+}
+.d3 {
+  left: 80px;
+  top: 14px;
+  transform: rotate(8deg);
+  animation: float 3.4s var(--ease-in-out) 0.7s infinite;
+}
+.beam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 78px;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(to bottom, transparent, var(--brand-2), transparent);
+  border-radius: var(--radius-pill);
+  animation: pulse-beam 2.2s var(--ease-in-out) infinite;
+}
+
+/* Pipeline: four nodes lighting up in sequence. */
+.art-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  animation: node-in 1.9s var(--ease-in-out) infinite;
+}
+.node i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--brand-2);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-2) 22%, transparent);
+}
+.node em {
+  font-size: var(--text-2xs);
+  font-style: normal;
+  font-weight: 560;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+/* Citations: prose lines with numbered chips attached. */
+.art-citations {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 190px;
+}
+.line {
+  height: 8px;
+  background: var(--surface-3);
+  border-radius: var(--radius-pill);
+}
+.l1 {
+  width: 100%;
+}
+.l2 {
+  width: 78%;
+}
+.l3 {
+  width: 88%;
+}
+.l4 {
+  width: 56%;
+}
+.cite {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--brand-2);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+.c1 {
+  right: -12px;
+  top: 15px;
+  animation: pop 2.6s var(--ease) infinite;
+}
+.c2 {
+  right: 22px;
+  top: 66px;
+  animation: pop 2.6s var(--ease) 0.6s infinite;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+}
+.body h2 {
+  margin: 4px 0 0;
+  font-size: var(--text-xl);
+  font-weight: 640;
+  letter-spacing: -0.022em;
+}
+.body p {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.dot {
+  width: 22px;
+  height: 4px;
+  padding: 0;
+  background: var(--surface-3);
+  border: none;
+  border-radius: var(--radius-pill);
+  transition: background var(--normal) var(--ease), width var(--normal) var(--ease);
+}
+.dot.active {
+  width: 30px;
+  background: var(--accent);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+}
+.right {
+  display: flex;
+  gap: 8px;
+}
+
+.primary,
+.secondary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  font-size: var(--text-sm);
+  font-weight: 560;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: background var(--fast) var(--ease), color var(--fast) var(--ease),
+    transform var(--fast) var(--ease);
+}
+.primary {
+  color: var(--accent-contrast);
+  background: var(--accent);
+}
+.primary svg {
+  font-size: 14px;
+}
+.primary:hover {
+  background: var(--accent-hover);
+}
+.primary:active {
+  transform: translateY(1px);
+}
+.secondary {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.secondary:hover {
+  background: var(--surface-3);
+}
+.ghost {
+  color: var(--text-faint);
+  background: none;
+}
+.ghost:hover {
+  color: var(--text-muted);
+}
+
+/* ── Animations ──────────────────────────────────────────────────────── */
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes float {
+  50% {
+    transform: translateY(-7px) rotate(var(--r, 0deg));
+  }
+}
+@keyframes pulse-beam {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translate(-50%, -50%) scaleY(0.9);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scaleY(1.05);
+  }
+}
+@keyframes node-in {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  45% {
+    opacity: 1;
+  }
+}
+@keyframes pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .d1,
+  .d2,
+  .d3,
+  .beam,
+  .node,
+  .c1,
+  .c2 {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .card {
+    width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .hero {
+    height: 150px;
+  }
+}

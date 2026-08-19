@@ -1,0 +1,717 @@
+:host {
+  display: block;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  height: 100%;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  padding: 18px 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.drawer-close {
+  display: none;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  font-size: 15px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+}
+.drawer-close:hover {
+  background: var(--surface-2);
+}
+
+.new-chat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 0.86rem;
+  font-weight: 550;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.16s var(--ease), transform 0.12s var(--ease);
+}
+.new-chat svg {
+  font-size: 15px;
+}
+.new-chat:hover {
+  background: var(--accent-hover);
+}
+.new-chat:active {
+  transform: translateY(1px);
+}
+.shortcut {
+  margin-left: auto;
+  padding: 1px 5px;
+  font-family: var(--font);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  color: var(--accent-contrast);
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-xs);
+  opacity: 0.85;
+}
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 3px;
+  background: var(--surface-2);
+  border-radius: 10px;
+}
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  font-size: 0.79rem;
+  font-weight: 550;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.tab:hover {
+  color: var(--text);
+}
+.tab.active {
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.tab-count {
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+.tab-live {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: throb 1.3s ease-in-out infinite;
+}
+
+.tab-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tab-body > app-documents-panel {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* ── Conversations ───────────────────────────────────────────────────── */
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
+}
+.search:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+.search svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-faint);
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: none;
+  border: none;
+  outline: none;
+}
+.search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.chat-list::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-list::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+}
+
+.list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin: 26px 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}
+.list-empty p {
+  margin: 0;
+}
+.list-empty strong {
+  font-weight: 580;
+  color: var(--text-muted);
+}
+.list-empty .sub {
+  font-size: var(--text-xs);
+}
+.empty-glyph {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 6px;
+  font-size: 19px;
+  color: var(--text-faint);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.14s var(--ease);
+}
+.chat-item:hover {
+  background: var(--surface-2);
+}
+.chat-item.active {
+  background: var(--accent-soft);
+}
+.chat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.chat-title {
+  font-size: 0.81rem;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chat-item.active .chat-title {
+  color: var(--accent);
+  font-weight: 600;
+}
+.chat-sub {
+  font-size: 0.69rem;
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.scoped {
+  color: var(--accent);
+}
+
+.chat-actions {
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity 0.14s var(--ease);
+}
+.chat-item:hover .chat-actions,
+.chat-item:focus-within .chat-actions {
+  opacity: 1;
+}
+.mini {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  color: var(--text-faint);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.mini svg {
+  width: 12px;
+  height: 12px;
+}
+.mini:hover {
+  color: var(--text);
+  background: var(--surface-3);
+}
+.mini.danger:hover {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.rename-input {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 7px;
+  font: inherit;
+  font-size: 0.81rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  outline: none;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+
+.side-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: none;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 9px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease);
+}
+.account:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.account > svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--text-faint);
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  font-size: var(--text-2xs);
+  font-weight: 680;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: var(--brand-gradient);
+  border-radius: var(--radius-sm);
+}
+.account-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.account-text strong {
+  font-size: var(--text-sm);
+  font-weight: 580;
+}
+.account-text small {
+  font-size: var(--text-2xs);
+  color: var(--text-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Credit line: legible and deliberate, but visually subordinate to the
+   product's own navigation. */
+.credit {
+  margin: 0;
+  padding: 0 2px 2px;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.01em;
+  color: var(--text-faint);
+}
+.credit strong {
+  font-weight: 580;
+  color: var(--text-muted);
+}
+
+/* ── Main ────────────────────────────────────────────────────────────── */
+
+.main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  background: var(--bg);
+}
+
+/* flex-basis:0 makes the flex layout — not the child's own height — decide
+   how tall the chat is, so it fills exactly the space the topbar leaves. */
+.main > app-chat {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  padding: 14px 26px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+  backdrop-filter: blur(12px);
+  z-index: 2;
+}
+.topbar-title {
+  flex: 1;
+  min-width: 0;
+}
+.topbar-title h1 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.topbar-title p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.working-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.spinner {
+  width: 11px;
+  height: 11px;
+  border: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.ghost-btn,
+.menu-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  font-size: 17px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.16s var(--ease), color 0.16s var(--ease);
+}
+.ghost-btn:hover,
+.menu-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+.menu-btn {
+  display: none;
+}
+
+.scrim {
+  display: none;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────── */
+
+@keyframes throb {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+
+@media (max-width: 980px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Sidebar becomes an overlay drawer rather than shrinking the chat. */
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(320px, 86vw);
+    z-index: 40;
+    transform: translateX(-102%);
+    transition: transform 0.26s var(--ease);
+    box-shadow: var(--shadow-lg);
+  }
+  .sidebar-open .sidebar {
+    transform: none;
+  }
+
+  .drawer-close {
+    display: grid;
+    place-items: center;
+  }
+  .menu-btn {
+    display: grid;
+  }
+
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: rgba(6, 9, 16, 0.5);
+    border: none;
+    cursor: pointer;
+    animation: fade 0.2s var(--ease) both;
+  }
+
+  .topbar {
+    padding: 12px 16px;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Search trigger ──────────────────────────────────────────────────── */
+
+/* A palette nobody can discover helps nobody, so the shortcut is advertised
+   rather than hidden behind knowing to press it. */
+.search-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px 7px 11px;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--fast) var(--ease), color var(--fast) var(--ease),
+    background var(--fast) var(--ease);
+}
+.search-trigger svg {
+  width: 14px;
+  height: 14px;
+}
+.search-trigger kbd {
+  padding: 1px 5px;
+  font-family: var(--font);
+  font-size: 0.94em;
+  color: var(--text-faint);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+}
+.search-trigger:hover {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+
+/* ── Shortcuts overlay ───────────────────────────────────────────────── */
+
+.shortcuts-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 170;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, #05070d 55%, transparent);
+  backdrop-filter: blur(6px);
+  animation: fade 0.18s var(--ease) both;
+}
+.shortcuts {
+  width: min(440px, 100%);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  animation: rise-in 0.24s var(--ease) both;
+}
+.shortcuts header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.shortcuts header h2 {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 640;
+}
+.shortcuts header button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: none;
+  border-radius: var(--radius-xs);
+}
+.shortcuts header button svg {
+  width: 13px;
+  height: 13px;
+}
+.shortcuts ul {
+  margin: 0;
+  padding: 8px;
+  list-style: none;
+}
+.shortcuts li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 10px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  border-radius: var(--radius-xs);
+}
+.shortcuts li:hover {
+  background: var(--surface-2);
+}
+.keys {
+  display: inline-flex;
+  gap: 3px;
+  flex: none;
+}
+.keys kbd {
+  min-width: 20px;
+  padding: 2px 6px;
+  font-family: var(--font);
+  font-size: var(--text-2xs);
+  text-align: center;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-xs);
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 720px) {
+  .search-trigger span,
+  .search-trigger kbd {
+    display: none;
+  }
+  .search-trigger {
+    padding: 8px;
+  }
+}

@@ -1,0 +1,98 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: workspace
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  chroma:
+    image: chromadb/chroma:0.5.5
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadata:/chroma/chroma
+
+  ai-service:
+    build: ./ai-service
+    ports:
+      - "8001:8001"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: gemini-flash-latest
+      POSTGRES_DSN: postgresql://postgres:postgres@postgres:5432/workspace
+      REDIS_URL: redis://redis:6379/0
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+      # Shared secret the ASP.NET API presents. Without it this service would
+      # accept any request that can reach the port.
+      SERVICE_TOKEN: ${SERVICE_TOKEN:-dev-service-token-change-me}
+      UPLOAD_DIR: /app/uploads
+      # Mount a checkout here to enable the Dev Agent's repository tools.
+      DEV_AGENT_REPO: /repo
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      chroma:
+        condition: service_started
+    volumes:
+      - ./ai-service:/app
+      # Read-only: the agent must never be able to write to the repository.
+      - ${DEV_AGENT_REPO_HOST:-./ai-service}:/repo:ro
+
+  api:
+    build:
+      context: ./api
+      target: dev
+    ports:
+      - "5080:5080"
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Database=workspace;Username=postgres;Password=postgres"
+      AiService__BaseUrl: "http://ai-service:8001"
+      Frontend__Origin: "http://localhost:4200"
+      ASPNETCORE_ENVIRONMENT: Development
+      Auth__Enabled: "false"
+      Auth__ServiceToken: ${SERVICE_TOKEN:-dev-service-token-change-me}
+      # Encrypts stored GitHub tokens. Changing it makes existing stored
+      # tokens undecryptable, so users simply reconnect GitHub.
+      Auth__TokenEncryptionKey: ${TOKEN_ENCRYPTION_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    volumes:
+      - ./api:/src
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  pgdata:
+  chromadata:

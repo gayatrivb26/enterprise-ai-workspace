@@ -1,0 +1,45 @@
+# --- Secrets — never commit these ---
+.env
+.env.local
+*.env
+!.env.example
+
+# --- Frontend (Angular / Node) ---
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# --- ai-service (Python) ---
+ai-service/venv/
+ai-service/__pycache__/
+ai-service/**/__pycache__/
+ai-service/*.pyc
+
+# --- api (.NET) ---
+api/bin/
+api/obj/
+
+# --- Editor / OS clutter ---
+.vscode/
+.vs/
+.DS_Store
+Thumbs.db
+
+# --- Runtime data — never commit ---
+# Original uploaded files are retained here so a failed ingest can be retried.
+# These are the user's own documents.
+ai-service/uploads/
+ai-service/**/uploads/
+
+# --- .NET user secrets are stored outside the repo, but be explicit ---
+api/secrets.json
+
+# --- Python tooling ---
+ai-service/.pytest_cache/
+ai-service/**/*.pyc
+.pytest_cache/
+
+# --- Build/editor leftovers ---
+*.bak
+*.orig
+*.log

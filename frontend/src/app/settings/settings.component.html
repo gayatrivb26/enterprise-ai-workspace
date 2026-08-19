@@ -1,0 +1,295 @@
+<div class="backdrop" (click)="close.emit()" (keydown)="onBackdropKeydown($event)" tabindex="-1">
+  <div
+    class="sheet"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settings-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="sheet-head">
+      <div class="head-text">
+        <h2 id="settings-title">Settings</h2>
+        <p>Preferences, usage and product information</p>
+      </div>
+      <button type="button" class="close-btn" (click)="close.emit()" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="sheet-body">
+      <!-- Appearance -->
+      <section class="group">
+        <h3>Appearance</h3>
+        <p class="group-hint">Folio follows your system theme unless you choose otherwise.</p>
+
+        <div class="theme-grid" role="radiogroup" aria-label="Theme">
+          @for (option of themeOptions; track option.id) {
+            <button
+              type="button"
+              class="theme-card"
+              [class.active]="theme.preference() === option.id"
+              (click)="setTheme(option.id)"
+              role="radio"
+              [attr.aria-checked]="theme.preference() === option.id"
+            >
+              <span class="preview" [attr.data-variant]="option.id" aria-hidden="true">
+                <span class="preview-bar"></span>
+                <span class="preview-line"></span>
+                <span class="preview-line short"></span>
+              </span>
+              <span class="theme-label">{{ option.label }}</span>
+              <span class="theme-hint">{{ option.hint }}</span>
+            </button>
+          }
+        </div>
+      </section>
+
+      <!-- Knowledge base -->
+      <section class="group">
+        <h3>Knowledge base</h3>
+        <div class="stat-grid">
+          <div class="stat">
+            <span class="stat-value">{{ formatNumber(docs.ready().length) }}</span>
+            <span class="stat-label">Documents indexed</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ formatNumber(docs.totalChunks()) }}</span>
+            <span class="stat-label">Searchable chunks</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ formatNumber(docs.processing().length) }}</span>
+            <span class="stat-label">Currently processing</span>
+          </div>
+          <div class="stat" [class.warn]="docs.failed().length > 0">
+            <span class="stat-value">{{ formatNumber(docs.failed().length) }}</span>
+            <span class="stat-label">Failed</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Usage -->
+      <section class="group">
+        <div class="group-head">
+          <h3>Usage &amp; cost</h3>
+          <button type="button" class="link-btn" (click)="stats.refresh()" [disabled]="stats.loading()">
+            {{ stats.loading() ? 'Refreshing…' : 'Refresh' }}
+          </button>
+        </div>
+        <p class="group-hint">Model calls made on your behalf over the last 30 days.</p>
+
+        @if (stats.error(); as message) {
+          <p class="inline-error">{{ message }}</p>
+        } @else if (usage(); as u) {
+          <div class="stat-grid">
+            <div class="stat">
+              <span class="stat-value">{{ formatNumber(u.calls) }}</span>
+              <span class="stat-label">Requests</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ formatNumber(u.tokens_in + u.tokens_out) }}</span>
+              <span class="stat-label">Tokens</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ formatCost(u.cost_usd) }}</span>
+              <span class="stat-label">Estimated cost</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value">{{ formatLatency(u.avg_latency_ms) }}</span>
+              <span class="stat-label">Avg. response</span>
+            </div>
+          </div>
+
+          <div class="cache-row">
+            <div class="cache-text">
+              <strong>Answer cache</strong>
+              <span>
+                {{ formatPercent(u.cache_hit_rate) }} of requests served instantly —
+                {{ formatNumber(savedCalls()) }} model call{{ savedCalls() === 1 ? '' : 's' }} avoided.
+              </span>
+            </div>
+            <div class="cache-meter" [attr.aria-label]="'Cache hit rate ' + formatPercent(u.cache_hit_rate)">
+              <div class="cache-fill" [style.width.%]="(u.cache_hit_rate || 0) * 100"></div>
+            </div>
+          </div>
+        } @else {
+          <p class="group-hint">No requests recorded yet.</p>
+        }
+      </section>
+
+      <!-- Integrations -->
+      <section class="group">
+        <h3>Integrations</h3>
+        <p class="group-hint">
+          Connect a code host and Folio can answer questions about your repositories —
+          what a function does, where something lives, who changed it and when.
+        </p>
+
+        @if (integrations.error(); as message) {
+          <p class="inline-error">
+            {{ message }}
+            <button type="button" class="link-btn" (click)="integrations.dismissError()">Dismiss</button>
+          </p>
+        }
+
+        <div class="integration">
+          <div class="integration-head">
+            <span class="gh-mark" aria-hidden="true">
+              <svg viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38
+                  0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01
+                  1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+                  0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.42 7.42 0 0 1 4 0c1.53-1.04
+                  2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54
+                  1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+              </svg>
+            </span>
+
+            <div class="integration-text">
+              <strong>GitHub</strong>
+              @if (integrations.isConnected()) {
+                <span class="connected">
+                  Connected as <b>{{ integrations.github().login }}</b>
+                </span>
+              } @else {
+                <span>Not connected</span>
+              }
+            </div>
+
+            @if (integrations.isConnected()) {
+              <button type="button" class="danger-btn" (click)="disconnectGitHub()">Disconnect</button>
+            } @else {
+              <button type="button" class="primary-btn" (click)="showTokenField.set(!showTokenField())">
+                {{ showTokenField() ? 'Cancel' : 'Connect' }}
+              </button>
+            }
+          </div>
+
+          @if (!integrations.isConnected() && showTokenField()) {
+            <div class="token-form">
+              <label for="gh-token">Personal access token</label>
+              <input
+                id="gh-token"
+                type="password"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="ghp_… or github_pat_…"
+                [value]="tokenDraft()"
+                (input)="onTokenInput($event)"
+                (keydown.enter)="connectGitHub()"
+              />
+              <p class="token-hint">
+                Create one at <b>github.com → Settings → Developer settings → Personal access
+                tokens</b>. Read-only access is enough: <code>repo</code> for private
+                repositories, or <code>public_repo</code> for public ones. The token is
+                encrypted before it is stored and is never shown again.
+              </p>
+              <button
+                type="button"
+                class="primary-btn wide"
+                (click)="connectGitHub()"
+                [disabled]="!tokenDraft().trim() || integrations.loading()"
+              >
+                {{ integrations.loading() ? 'Verifying…' : 'Verify and connect' }}
+              </button>
+            </div>
+          }
+
+          @if (integrations.isConnected()) {
+            <div class="repo-picker">
+              <div class="repo-head">
+                <span>Repository the assistant answers about</span>
+                <button type="button" class="link-btn" (click)="integrations.loadRepos()"
+                        [disabled]="integrations.loadingRepos()">
+                  {{ integrations.loadingRepos() ? 'Loading…' : 'Refresh' }}
+                </button>
+              </div>
+
+              @if (integrations.repos().length > 8) {
+                <input
+                  class="repo-filter"
+                  type="search"
+                  placeholder="Filter repositories"
+                  [value]="repoFilter()"
+                  (input)="onRepoFilter($event)"
+                  aria-label="Filter repositories"
+                />
+              }
+
+              <div class="repo-list">
+                @if (integrations.loadingRepos() && !integrations.repos().length) {
+                  <p class="repo-empty">Loading your repositories…</p>
+                } @else if (!visibleRepos().length) {
+                  <p class="repo-empty">No repositories found.</p>
+                }
+
+                @for (repo of visibleRepos(); track repo.fullName) {
+                  <button
+                    type="button"
+                    class="repo"
+                    [class.active]="integrations.activeRepo() === repo.fullName"
+                    (click)="selectRepo(repo.fullName)"
+                  >
+                    <span class="repo-name">
+                      {{ repo.fullName }}
+                      @if (repo.private) { <span class="repo-private">private</span> }
+                    </span>
+                    @if (repo.description) {
+                      <span class="repo-desc">{{ repo.description }}</span>
+                    }
+                    @if (integrations.activeRepo() === repo.fullName) {
+                      <span class="repo-check" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="m5 12 5 5L20 7" />
+                        </svg>
+                      </span>
+                    }
+                  </button>
+                }
+              </div>
+
+              @if (integrations.activeRepo()) {
+                <p class="repo-active">
+                  Ask things like <em>"who changed authentication recently?"</em> and the
+                  Dev Agent will answer from <b>{{ integrations.activeRepo() }}</b>.
+                </p>
+              } @else {
+                <p class="repo-active muted">Pick a repository to enable code questions.</p>
+              }
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- About -->
+      <section class="group">
+        <h3>About</h3>
+        <div class="about">
+          <app-logo [size]="44" [tagline]="'Ask your documents'" />
+          <p class="about-copy">
+            Folio turns your team's internal documents into answers you can trust. Every
+            response is grounded in your own files and cites the exact passages it used,
+            so nothing is invented.
+          </p>
+          <dl class="about-meta">
+            <div><dt>Version</dt><dd>1.0</dd></div>
+            <div><dt>Retrieval</dt><dd>Hybrid vector search with MMR</dd></div>
+            <div><dt>Cache</dt><dd>{{ cache()?.available ? 'Active' : 'Unavailable' }}</dd></div>
+          </dl>
+        </div>
+      </section>
+    </div>
+
+    <footer class="sheet-foot">
+      <span class="attribution">
+        Built by
+        <strong>Gayatri Bhosale</strong>
+      </span>
+      <span class="foot-dot" aria-hidden="true">·</span>
+      <span class="foot-note">Folio Workspace</span>
+    </footer>
+  </div>
+</div>

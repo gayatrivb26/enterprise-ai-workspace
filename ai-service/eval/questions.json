@@ -1,0 +1,144 @@
+[
+  {
+    "question": "What is our leave policy?",
+    "expected_answer": "Employees accrue paid annual leave as set out in the HR leave policy.",
+    "expected_source": "leave-policy",
+    "expected_keywords": ["leave"],
+    "answerable": true
+  },
+  {
+    "question": "How many days of annual leave do employees get?",
+    "expected_answer": "The leave policy states the annual entitlement in days.",
+    "expected_source": "leave-policy",
+    "expected_keywords": ["days"],
+    "answerable": true
+  },
+  {
+    "question": "How do I request time off?",
+    "expected_answer": "Requests follow the process described in the leave policy.",
+    "expected_source": "leave-policy",
+    "expected_keywords": ["request"],
+    "answerable": true
+  },
+  {
+    "question": "What is the remote working policy?",
+    "expected_answer": "The handbook sets out how many days may be worked remotely.",
+    "expected_source": "handbook",
+    "expected_keywords": ["remote"],
+    "answerable": true
+  },
+  {
+    "question": "Who approves expenses over the standard limit?",
+    "expected_answer": "The expenses policy names the approver above the limit.",
+    "expected_source": "expenses",
+    "expected_keywords": ["approv"],
+    "answerable": true
+  },
+  {
+    "question": "What is the notice period for resignation?",
+    "expected_answer": "The handbook states the contractual notice period.",
+    "expected_source": "handbook",
+    "expected_keywords": ["notice"],
+    "answerable": true
+  },
+  {
+    "question": "What security training is mandatory for new joiners?",
+    "expected_answer": "The onboarding document lists mandatory security training.",
+    "expected_source": "onboarding",
+    "expected_keywords": ["security"],
+    "answerable": true
+  },
+  {
+    "question": "What are the company's core working hours?",
+    "expected_answer": "The handbook defines core hours.",
+    "expected_source": "handbook",
+    "expected_keywords": ["hours"],
+    "answerable": true
+  },
+  {
+    "question": "Which benefits are available to part-time employees?",
+    "expected_answer": "The benefits document describes part-time entitlement.",
+    "expected_source": "benefits",
+    "expected_keywords": ["part-time"],
+    "answerable": true
+  },
+  {
+    "question": "How is personal data handled when an employee leaves?",
+    "expected_answer": "The data policy covers retention after departure.",
+    "expected_source": "data-policy",
+    "expected_keywords": ["data"],
+    "answerable": true
+  },
+  {
+    "question": "What is the escalation path for a production incident?",
+    "expected_answer": "The incident runbook defines the escalation path.",
+    "expected_source": "incident",
+    "expected_keywords": ["escalat"],
+    "answerable": true
+  },
+  {
+    "question": "How often are access reviews carried out?",
+    "expected_answer": "The security policy states the review cadence.",
+    "expected_source": "security",
+    "expected_keywords": ["review"],
+    "answerable": true
+  },
+  {
+    "question": "What is the travel booking process?",
+    "expected_answer": "The travel policy describes how to book travel.",
+    "expected_source": "travel",
+    "expected_keywords": ["book"],
+    "answerable": true
+  },
+  {
+    "question": "What equipment is provided to new engineers?",
+    "expected_answer": "The onboarding document lists standard equipment.",
+    "expected_source": "onboarding",
+    "expected_keywords": ["equipment"],
+    "answerable": true
+  },
+  {
+    "question": "What is the probation period length?",
+    "expected_answer": "The handbook states the probation period.",
+    "expected_source": "handbook",
+    "expected_keywords": ["probation"],
+    "answerable": true
+  },
+  {
+    "question": "How are performance reviews scheduled?",
+    "expected_answer": "The performance policy sets the review cycle.",
+    "expected_source": "performance",
+    "expected_keywords": ["review"],
+    "answerable": true
+  },
+  {
+    "question": "What is the policy on accepting gifts from suppliers?",
+    "expected_answer": "The code of conduct covers gifts and hospitality.",
+    "expected_source": "conduct",
+    "expected_keywords": ["gift"],
+    "answerable": true
+  },
+  {
+    "question": "How do I report a security vulnerability?",
+    "expected_answer": "The security policy gives the reporting route.",
+    "expected_source": "security",
+    "expected_keywords": ["report"],
+    "answerable": true
+  },
+
+  {
+    "_comment": "Unanswerable by design. A grounded assistant must decline rather than invent, so these score groundedness 1.0 only when nothing is cited.",
+    "question": "What is the airspeed velocity of an unladen swallow?",
+    "expected_answer": "Not covered by any company document; the assistant should say so.",
+    "expected_source": "",
+    "expected_keywords": ["not"],
+    "answerable": false
+  },
+  {
+    "question": "What were last quarter's exact revenue figures for our closest competitor?",
+    "expected_answer": "Not present in the corpus; the assistant should decline rather than guess.",
+    "expected_source": "",
+    "expected_keywords": ["not"],
+    "answerable": false
+  }
+]

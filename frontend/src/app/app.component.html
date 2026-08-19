@@ -1,0 +1,267 @@
+<div class="shell" [class.sidebar-open]="store.sidebarOpen()">
+  <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+  <aside class="sidebar" aria-label="Workspace navigation">
+    <div class="brand">
+      <app-logo [size]="36" [tagline]="'Workspace'" />
+      <button type="button" class="drawer-close" (click)="store.closeSidebar()" aria-label="Close menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+
+    <button type="button" class="new-chat" (click)="newChat()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      New conversation
+      <kbd class="shortcut">⌘⇧K</kbd>
+    </button>
+
+    <!-- Tabs -->
+    <div class="tabs" role="tablist" aria-label="Sidebar sections">
+      <button
+        type="button"
+        class="tab"
+        [class.active]="store.sidebarTab() === 'chats'"
+        (click)="store.sidebarTab.set('chats')"
+        role="tab"
+        [attr.aria-selected]="store.sidebarTab() === 'chats'"
+      >
+        Chats
+        @if (conversations.chats().length) {
+          <span class="tab-count">{{ conversations.chats().length }}</span>
+        }
+      </button>
+      <button
+        type="button"
+        class="tab"
+        [class.active]="store.sidebarTab() === 'documents'"
+        (click)="store.sidebarTab.set('documents')"
+        role="tab"
+        [attr.aria-selected]="store.sidebarTab() === 'documents'"
+      >
+        Library
+        @if (docs.documents().length) {
+          <span class="tab-count">{{ docs.documents().length }}</span>
+        }
+        @if (docs.processing().length) {
+          <span class="tab-live"><span class="sr-only">Processing documents</span></span>
+        }
+      </button>
+    </div>
+
+    <!-- Tab body -->
+    <div class="tab-body">
+      @if (store.sidebarTab() === 'chats') {
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+          </svg>
+          <input
+            type="search"
+            placeholder="Search conversations"
+            [value]="chatSearch()"
+            (input)="onChatSearch($event)"
+            aria-label="Search conversations"
+          />
+        </label>
+
+        <div class="chat-list">
+          @if (!filteredChats().length) {
+            <div class="list-empty">
+              @if (conversations.loading()) {
+                <p>Loading…</p>
+              } @else if (chatSearch()) {
+                <p>No conversations match "{{ chatSearch() }}".</p>
+              } @else {
+                <span class="empty-glyph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L3 21l1.1-4.6A8.4 8.4 0 1 1 21 11.5Z" />
+                  </svg>
+                </span>
+                <p><strong>No conversations yet</strong></p>
+                <p class="sub">Ask a question to start one.</p>
+              }
+            </div>
+          }
+
+          @for (chat of filteredChats(); track chat.id) {
+            <div
+              class="chat-item"
+              [class.active]="store.activeChatId() === chat.id"
+              (click)="openChat(chat)"
+              (keydown.enter)="openChat(chat)"
+              (keydown.space)="openChat(chat)"
+              tabindex="0"
+              role="button"
+              [attr.aria-current]="store.activeChatId() === chat.id ? 'true' : null"
+            >
+              @if (renamingId() === chat.id) {
+                <input
+                  class="rename-input"
+                  [value]="chat.title"
+                  (click)="$event.stopPropagation()"
+                  (blur)="commitRename($event, chat)"
+                  (keydown)="onRenameKeydown($event, chat)"
+                  aria-label="Conversation title"
+                  autofocus
+                />
+              } @else {
+                <div class="chat-text">
+                  <span class="chat-title">{{ chat.title }}</span>
+                  <span class="chat-sub">
+                    {{ formatRelativeTime(chat.updatedAt) }}
+                    @if (chat.messageCount) { · {{ chat.messageCount }} messages }
+                    @if (chat.documentIds.length) {
+                      · <span class="scoped">{{ chat.documentIds.length }} docs</span>
+                    }
+                  </span>
+                </div>
+
+                <div class="chat-actions">
+                  <button type="button" class="mini" (click)="startRename($event, chat)"
+                          [attr.aria-label]="'Rename ' + chat.title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                  </button>
+                  <button type="button" class="mini danger" (click)="deleteChat($event, chat)"
+                          [attr.aria-label]="'Delete ' + chat.title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13h10l1-13" />
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <app-documents-panel />
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="side-footer">
+      <button type="button" class="account" (click)="openSettings()">
+        <span class="avatar" aria-hidden="true">{{ auth.profile().initials }}</span>
+        <span class="account-text">
+          <strong>{{ auth.profile().name }}</strong>
+          <small>{{ docs.ready().length }} docs · {{ docs.totalChunks() }} chunks</small>
+        </span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z" />
+        </svg>
+      </button>
+
+      <p class="credit">Built by <strong>Gayatri Bhosale</strong></p>
+    </div>
+  </aside>
+
+  <!-- Mobile scrim -->
+  @if (store.sidebarOpen()) {
+    <button type="button" class="scrim" (click)="store.closeSidebar()" aria-label="Close menu"></button>
+  }
+
+  <!-- ── Main ────────────────────────────────────────────────────────── -->
+  <main class="main">
+    <header class="topbar">
+      <button type="button" class="menu-btn" (click)="toggleSidebar()" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <div class="topbar-title">
+        <h1>Knowledge Assistant</h1>
+        <p>{{ store.scopeLabel() }}</p>
+      </div>
+
+      <div class="topbar-actions">
+        @if (docs.processing().length) {
+          <button type="button" class="working-pill" (click)="store.openTab('documents')">
+            <span class="spinner" aria-hidden="true"></span>
+            Indexing {{ docs.processing().length }}
+          </button>
+        }
+        <button type="button" class="search-trigger" (click)="openPalette()"
+                aria-label="Search and commands">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+          </svg>
+          <span>Search</span>
+          <kbd>⌘K</kbd>
+        </button>
+        <button type="button" class="ghost-btn" (click)="openSettings()" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z" />
+          </svg>
+        </button>
+        <button type="button" class="ghost-btn" (click)="newChat()" aria-label="New conversation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <app-chat />
+  </main>
+</div>
+
+@if (paletteOpen()) {
+  <app-command-palette
+    (close)="closePalette()"
+    (openSettings)="openSettings()"
+    (newChat)="newChat()"
+  />
+}
+
+@if (shortcutsOpen()) {
+  <div class="shortcuts-backdrop" (click)="closeShortcuts()">
+    <div class="shortcuts" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts"
+         (click)="$event.stopPropagation()">
+      <header>
+        <h2>Keyboard shortcuts</h2>
+        <button type="button" (click)="closeShortcuts()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
+      <ul>
+        @for (shortcut of shortcuts; track shortcut.label) {
+          <li>
+            <span>{{ shortcut.label }}</span>
+            <span class="keys">
+              @for (key of shortcut.keys; track key) { <kbd>{{ key }}</kbd> }
+            </span>
+          </li>
+        }
+      </ul>
+    </div>
+  </div>
+}
+
+@if (settingsOpen()) {
+  <app-settings (close)="closeSettings()" />
+}
+
+@if (onboardingOpen()) {
+  <app-onboarding (finish)="finishOnboarding($event)" />
+}
+
+<app-toasts />

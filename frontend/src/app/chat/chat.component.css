@@ -1,0 +1,1200 @@
+/* ==========================================================================
+   Chat surface. Design tokens live in src/styles.css so the shell, the
+   documents panel and this view stay visually identical.
+   ========================================================================== */
+
+/*
+ * The host is sized by the shell's flex layout, NOT by height:100%. Claiming
+ * 100% here made this element as tall as .main *in addition to* the topbar,
+ * so the column overflowed, the composer was pushed off-screen and the inner
+ * scroll area never got a bounded height to scroll within.
+ */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+svg {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+.chat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* ── Thread ──────────────────────────────────────────────────────────── */
+
+.scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.thread {
+  max-width: var(--content-width);
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 28px 28px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* ── Loading skeletons ───────────────────────────────────────────────── */
+
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 0;
+}
+.skeleton {
+  height: 46px;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--surface-3) 37%,
+    var(--surface-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+
+/* margin-block:auto centres the empty state in the leftover space, so a
+   brand-new workspace doesn't leave a tall band of dead air above the fold. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-block: auto;
+  padding: 32px 0;
+  animation: rise 0.45s var(--ease) both;
+}
+.empty-mark {
+  margin-bottom: 20px;
+}
+.empty h2 {
+  margin: 0 0 8px;
+  font-size: 1.42rem;
+  font-weight: 650;
+  letter-spacing: -0.022em;
+}
+.empty p {
+  margin: 0 0 26px;
+  /* min() keeps the comfortable measure on desktop without letting the
+     paragraph set a minimum width that overflows a phone. */
+  max-width: min(46ch, 100%);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 0.86rem;
+  font-weight: 550;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.16s var(--ease), transform 0.12s var(--ease);
+}
+.cta:hover {
+  background: var(--accent-hover);
+}
+.cta:active {
+  transform: translateY(1px);
+}
+
+.suggestions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  font-size: 0.84rem;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease),
+    transform 0.16s var(--ease);
+}
+.suggestion svg {
+  font-size: 15px;
+  color: var(--text-faint);
+  transition: transform 0.18s var(--ease), color 0.18s var(--ease);
+}
+.suggestion:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.suggestion:hover svg {
+  color: var(--accent);
+  transform: translateX(3px);
+}
+
+/* ── Turns ───────────────────────────────────────────────────────────── */
+
+.turn {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 13px;
+  animation: rise 0.32s var(--ease) both;
+}
+.turn.user {
+  grid-template-columns: minmax(0, 1fr) 30px;
+}
+.turn.user .avatar {
+  order: 2;
+}
+.turn.user .turn-body {
+  order: 1;
+  align-items: flex-end;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-top: 22px;
+  font-size: 15px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.avatar.assistant {
+  color: #fff;
+  background: linear-gradient(140deg, var(--accent), #8b5cf6);
+  border-color: transparent;
+}
+
+.turn-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.turn-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 2px;
+}
+.who {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--text-faint);
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  font-size: 0.66rem;
+  font-weight: 550;
+  color: var(--text-muted);
+  background: var(--surface-3);
+  border-radius: 999px;
+}
+.tag svg {
+  font-size: 9px;
+}
+.tag.error {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+.tag.cached {
+  color: var(--success);
+  background: var(--success-soft);
+}
+
+.bubble {
+  max-width: 100%;
+  padding: 13px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.turn.user .bubble {
+  color: #fff;
+  background: linear-gradient(140deg, var(--accent), #6d5ce7);
+  border-color: transparent;
+  border-bottom-right-radius: 5px;
+}
+.turn:not(.user) .bubble {
+  border-bottom-left-radius: 5px;
+}
+.bubble.streaming {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+
+/* ── Prose ───────────────────────────────────────────────────────────── */
+
+.prose {
+  font-size: 0.912rem;
+  line-height: 1.68;
+  overflow-wrap: anywhere;
+}
+.prose.plain {
+  white-space: pre-wrap;
+}
+
+/*
+ * Everything below styles markup produced by markdown.ts and injected with
+ * [innerHTML]. Angular does not stamp its emulated-encapsulation attribute
+ * onto dynamically inserted nodes, so these descendant rules must pierce the
+ * component boundary with ::ng-deep — scoped to :host so nothing leaks out.
+ */
+:host ::ng-deep .prose > :first-child {
+  margin-top: 0;
+}
+:host ::ng-deep .prose > :last-child {
+  margin-bottom: 0;
+}
+:host ::ng-deep .prose p {
+  margin: 0 0 11px;
+}
+:host ::ng-deep .prose h3,
+:host ::ng-deep .prose h4,
+:host ::ng-deep .prose h5,
+:host ::ng-deep .prose h6 {
+  margin: 18px 0 8px;
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+:host ::ng-deep .prose ul,
+:host ::ng-deep .prose ol {
+  margin: 0 0 11px;
+  padding-left: 20px;
+}
+:host ::ng-deep .prose li {
+  margin: 3px 0;
+}
+:host ::ng-deep .prose li::marker {
+  color: var(--text-faint);
+}
+:host ::ng-deep .prose blockquote {
+  margin: 0 0 11px;
+  padding: 2px 0 2px 13px;
+  color: var(--text-muted);
+  border-left: 3px solid var(--border-strong);
+}
+:host ::ng-deep .prose hr {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+:host ::ng-deep .prose a {
+  color: var(--accent);
+  text-underline-offset: 2px;
+}
+:host ::ng-deep .prose strong {
+  font-weight: 650;
+}
+:host ::ng-deep .prose .code-inline {
+  padding: 1.5px 5px;
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--surface-3);
+  border-radius: 5px;
+}
+:host ::ng-deep .prose .code-block {
+  position: relative;
+  margin: 0 0 11px;
+  padding: 13px 14px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+:host ::ng-deep .prose .code-block code {
+  font: inherit;
+  white-space: pre;
+}
+:host ::ng-deep .prose .code-lang {
+  position: absolute;
+  top: 8px;
+  left: 13px;
+  font-size: var(--text-2xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+:host ::ng-deep .prose .code-block:has(.code-lang) code {
+  display: block;
+  margin-top: 15px;
+}
+
+/* Copy button on code blocks. Revealed on hover, but always reachable by
+   keyboard — hover-only controls are invisible to keyboard users. */
+:host ::ng-deep .prose .code-copy {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  font-family: var(--font);
+  font-size: var(--text-2xs);
+  font-weight: 550;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  opacity: 0;
+  transition: opacity var(--fast) var(--ease), color var(--fast) var(--ease),
+    border-color var(--fast) var(--ease);
+}
+:host ::ng-deep .prose .code-copy svg {
+  width: 11px;
+  height: 11px;
+}
+:host ::ng-deep .prose .code-block:hover .code-copy,
+:host ::ng-deep .prose .code-copy:focus-visible {
+  opacity: 1;
+}
+:host ::ng-deep .prose .code-copy:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+/* Inline [Source N] citations rendered by markdown.ts */
+:host ::ng-deep .prose .citation {
+  display: inline-grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  margin: 0 1px;
+  padding: 0 4px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  vertical-align: 1px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 5px;
+}
+
+/* ── Streaming affordances ───────────────────────────────────────────── */
+
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.thinking-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.typing {
+  display: inline-flex;
+  gap: 4px;
+}
+.typing i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: bounce 1.3s ease-in-out infinite;
+}
+.typing.small i {
+  width: 4px;
+  height: 4px;
+}
+.typing i:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.typing i:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--accent);
+  animation: blink 1s steps(2, start) infinite;
+}
+
+/* ── Sources & citations ─────────────────────────────────────────────── */
+
+.sources {
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px dashed var(--border);
+}
+.sources-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 7px;
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.sources-label em {
+  display: grid;
+  place-items: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  font-size: 0.62rem;
+  font-style: normal;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip-wrap {
+  position: relative;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 260px;
+  padding: 4px 9px 4px 4px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: border-color 0.16s var(--ease), color 0.16s var(--ease);
+}
+.chip:hover,
+.chip.open {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.chip-index {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  font-size: 0.63rem;
+  font-weight: 650;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 4px;
+}
+.chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.citation-card {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: min(380px, 78vw);
+  padding: 12px 13px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  animation: rise 0.18s var(--ease) both;
+}
+.citation-card header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding-right: 18px;
+}
+.citation-card header strong {
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.relevance {
+  flex: none;
+  font-size: 0.66rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--success);
+}
+.citation-heading {
+  margin: 0 0 6px;
+  font-size: 0.71rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.citation-card blockquote {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 0.79rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 7px 7px 0;
+  max-height: 190px;
+  overflow-y: auto;
+}
+.citation-empty {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-faint);
+}
+.citation-close {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-faint);
+  background: none;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.citation-close:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+/* ── Turn actions ────────────────────────────────────────────────────── */
+
+.turn-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 2px;
+  opacity: 0;
+  transition: opacity 0.18s var(--ease);
+}
+.turn:hover .turn-actions,
+.turn:focus-within .turn-actions {
+  opacity: 1;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.16s var(--ease), color 0.16s var(--ease),
+    border-color 0.16s var(--ease);
+}
+.icon-btn svg {
+  font-size: 13px;
+}
+.icon-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.usage {
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+/* ── Jump-to-latest ──────────────────────────────────────────────────── */
+
+.jump {
+  position: absolute;
+  left: 50%;
+  bottom: 176px;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  z-index: 3;
+  animation: rise 0.22s var(--ease) both;
+}
+.jump:hover {
+  color: var(--text);
+}
+
+/* ── Composer ────────────────────────────────────────────────────────── */
+
+.composer-wrap {
+  position: relative;
+  flex: none;
+  max-width: 840px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 10px 28px 16px;
+}
+.composer-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -40px 0 100% 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  border-radius: 11px;
+  animation: rise 0.22s var(--ease) both;
+}
+.banner > svg {
+  font-size: 16px;
+}
+.banner-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+}
+.banner-btn {
+  flex: none;
+  padding: 4px 11px;
+  font-size: 0.76rem;
+  font-weight: 550;
+  color: var(--danger);
+  background: transparent;
+  border: 1px solid var(--danger-border);
+  border-radius: 7px;
+  cursor: pointer;
+}
+.banner-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+.banner-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.banner-close {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--danger);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0.65;
+}
+.banner-close:hover {
+  opacity: 1;
+}
+
+/* Scope bar — always states what the next question will search. */
+.scope-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.scope-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.16s var(--ease), color 0.16s var(--ease);
+}
+.scope-pill svg {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+.scope-pill:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.scope-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 190px;
+  padding: 4px 9px;
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scope-chip:hover {
+  border-color: var(--accent);
+}
+.scope-working {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.71rem;
+  color: var(--text-faint);
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  padding: 9px 9px 9px 15px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+.composer:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-lg), 0 0 0 4px var(--accent-ring);
+}
+
+.composer-input {
+  flex: 1;
+  min-width: 0;
+  max-height: 200px;
+  padding: 8px 0;
+  font: inherit;
+  font-size: 0.912rem;
+  line-height: 1.55;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  scrollbar-width: thin;
+}
+.composer-input::placeholder {
+  color: var(--text-faint);
+}
+
+.send {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 9px 15px;
+  font-size: 0.85rem;
+  font-weight: 550;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.16s var(--ease), opacity 0.16s var(--ease),
+    transform 0.12s var(--ease);
+}
+.send svg {
+  font-size: 16px;
+}
+.send:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.send:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.send:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+.send.stop {
+  color: var(--text);
+  background: var(--surface-3);
+}
+.send.stop:hover {
+  background: var(--border-strong);
+}
+
+.composer-hint {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 0.71rem;
+  color: var(--text-faint);
+}
+kbd {
+  padding: 1px 5px;
+  font-family: var(--font);
+  font-size: 0.94em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────── */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-5px);
+    opacity: 1;
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typing i,
+  .caret,
+  .skeleton {
+    animation: none !important;
+  }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .thread {
+    padding: 20px 16px 8px;
+  }
+  .composer-wrap {
+    padding: 8px 16px 14px;
+  }
+  .suggestions {
+    grid-template-columns: 1fr;
+  }
+  .jump {
+    bottom: 168px;
+  }
+}
+
+@media (max-width: 560px) {
+  .send span {
+    display: none;
+  }
+  .send {
+    padding: 10px 12px;
+  }
+  .turn,
+  .turn.user {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .avatar {
+    display: none;
+  }
+  .turn.user .turn-body {
+    order: 0;
+  }
+  .composer-hint {
+    display: none;
+  }
+  .citation-card {
+    width: min(320px, 86vw);
+  }
+}
+
+/* Capability badge — a repository answer and a document answer are grounded in
+   different things, so which one produced it has to be visible. */
+.tag.route {
+  gap: 5px;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+.route-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.tag.route[data-route='meeting'] {
+  color: var(--warning);
+  background: var(--warning-soft);
+}
+.usage.tools {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  opacity: 0.85;
+}
+
+/* ── Retrieval trace ─────────────────────────────────────────────────── */
+
+/* A spinner that says nothing for four seconds reads as a hang. These steps
+   are derived from the stream, so they report real progress. */
+.trace {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 2px 0;
+  list-style: none;
+}
+
+.trace-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: var(--text-sm);
+  animation: trace-in 0.26s var(--ease) both;
+}
+
+.trace-mark {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.trace-mark svg {
+  width: 12px;
+  height: 12px;
+}
+
+.trace-step[data-state='done'] .trace-mark {
+  color: var(--success);
+}
+.trace-step[data-state='done'] .trace-label {
+  color: var(--text-muted);
+}
+
+.trace-step[data-state='active'] .trace-label {
+  color: var(--text);
+  font-weight: 520;
+}
+
+.trace-spin {
+  width: 12px;
+  height: 12px;
+  border: 2px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: trace-spin 0.7s linear infinite;
+}
+
+@keyframes trace-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes trace-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trace-spin { animation: none; }
+}
+
+/* ── Ambient empty state ─────────────────────────────────────────────── */
+
+.empty {
+  position: relative;
+}
+
+/*
+ * A soft brand wash behind the empty state. This is the only place in the app
+ * with room for atmosphere — everywhere else it would compete with content —
+ * and it is heavily blurred and low-opacity so it reads as light rather than
+ * as a shape. Pointer-events off so it never intercepts a click.
+ */
+.empty-glow {
+  /*
+   * inset:0 with a radial gradient rather than a blurred circle: a blurred
+   * element is laid out at its unblurred size, so it extended past the fold
+   * and gave an *empty* screen a scrollbar. This fills exactly the space it
+   * is given, cannot overflow, and skips a 110px blur every frame.
+   */
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    60% 50% at 50% 32%,
+    color-mix(in srgb, var(--brand-2) 22%, transparent),
+    transparent 70%
+  );
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+:root[data-theme='dark'] .empty-glow {
+  opacity: 0.75;
+}
+
+/* Content sits above the wash. */
+.empty > *:not(.empty-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+/* The mark gets a matching halo so it feels lit rather than pasted on. */
+.empty-mark {
+  position: relative;
+}
+.empty-mark::after {
+  content: '';
+  position: absolute;
+  inset: -22%;
+  background: var(--brand-gradient);
+  filter: blur(26px);
+  opacity: 0.22;
+  border-radius: 30%;
+  z-index: -1;
+}
+
+/* Suggestion cards lift toward the pointer with a brand-tinted edge. */
+.suggestion {
+  position: relative;
+  overflow: hidden;
+}
+.suggestion::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--brand-1) 8%, transparent),
+    transparent 55%
+  );
+  opacity: 0;
+  transition: opacity var(--normal) var(--ease);
+  pointer-events: none;
+}
+.suggestion:hover::before {
+  opacity: 1;
+}
+
+/* The composer picks up the brand gradient on focus, so the active input is
+   unmistakable without a heavy border. */
+.composer::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--brand-gradient);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--normal) var(--ease);
+  pointer-events: none;
+}
+.composer {
+  position: relative;
+}
+.composer:focus-within::after {
+  opacity: 0.85;
+}
+
+
+/* User-side actions mirror the assistant's, but align to the right edge of
+   the bubble so they read as belonging to that turn. */
+.turn.user .turn-actions {
+  justify-content: flex-end;
+}
+
+/* Message text must always be selectable — a transcript people cannot copy
+   from is a transcript they cannot use. */
+.prose,
+.prose.plain,
+.bubble {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* The transcript must never be squeezed out of existence by a tall composer
+   (error banner + several scope chips + a grown textarea on a short window). */
+.scroll-area {
+  min-height: 96px;
+}
+
+/* Nor may the composer grow without bound and push itself off-screen; past
+   this the textarea scrolls internally instead. */
+.composer-wrap {
+  max-height: 55vh;
+  overflow: visible;
+}
