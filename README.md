@@ -178,16 +178,4 @@ ai-service/     FastAPI
 db/             init.sql + idempotent migrations, applied by the API at boot
 ```
 
-## Known limitations
-
-- **Gemini's free tier allows ~20 requests per day per model.** Exhausting it
-  surfaces a clear message; it resets every 24 hours, or add billing.
-- **GitHub connects by pasted token, not OAuth.** No "Sign in with GitHub" yet.
-- **Ingestion runs in-process**, as a FastAPI background task. Redis backs the
-  answer cache only; a job queue is the next step for multi-worker deployment.
-- **No OCR.** Images are indexed by filename and dimensions, with an explicit
-  note that their contents were not read.
-- **No frontend test runner.** The Angular app has no test tooling; its
-  behaviour is covered by targeted Node scripts. The Python suite is real.
-
 Built by **Gayatri Bhosale**.
